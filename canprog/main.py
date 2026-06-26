@@ -45,7 +45,9 @@ def config_parser():
     
     group = parser.add_argument_group('configuration')
     group.add_argument('-n', dest='name', action='store', default='slcan0', help='interface name (default: slcan0)')
-    group.add_argument('-i', dest='interface', action='store', choices=('socketcan',), default='socketcan', help='interface type (default: socketcan)')
+    ##For Windows 
+    group.add_argument('-i', dest='interface', action='store', choices=('socketcan', 'ixxat'), default='socketcan', help='interface type (default: socketcan)')
+    ##
     group.add_argument('-f', dest='format', action='store', choices=('hex','bin'), default='hex', help='file format (default: hex)')
     
     subparsers = parser.add_subparsers(title='protocols', dest='protocol')
@@ -205,9 +207,19 @@ def main():
     
     if params.verbose:
         canprog.logger.set_level(canprog.logger.logging.DEBUG)
-    
+
+    ##For Windows 
     if params.interface == 'socketcan':
-        iface = can.interface.Bus(channel=params.name, bustype='socketcan_native')
+        iface = can.interface.Bus(channel=params.name, interface='socketcan')
+
+    elif params.interface == 'ixxat':
+        iface = can.interface.Bus(
+            interface='ixxat',
+            channel=0,
+            bitrate=125000
+    )
+        
+    ##
     
     datafile = file.FileManager()
     
@@ -249,13 +261,15 @@ def main():
             log.info('Nothing to do...')
         
         disconnect(protocol)
-        sys.exit(0)
+        return 0
     except ValueError as e:
         log.error(e)
     except ConnectionError as e:
         log.error(e)
 
+    finally:
+        iface.shutdown()
+
 if __name__ == '__main__':
-    main()
-    sys.exit(1)
+    sys.exit(main())
     
