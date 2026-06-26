@@ -1,0 +1,32 @@
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1,0,0,0),
+    prodvers=(1,0,0,0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0,0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [
+          StringStruct('CompanyName', 'Transcell Technology Inc.'),
+          StringStruct('FileDescription', 'STM32 CAN Bootloader Programmer'),
+          StringStruct('FileVersion', '1.0.0.0'),
+          StringStruct('InternalName', 'STM32_CAN_Programmer'),
+          StringStruct('OriginalFilename', 'STM32_CAN_Programmer.exe'),
+          StringStruct('ProductName', 'STM32 CAN Factory Programmer'),
+          StringStruct('ProductVersion', '1.1.0.0'),
+          StringStruct('LegalCopyright', '© 2026 Transcell Technology Inc.')
+        ]
+      )
+    ]),
+    VarFileInfo([
+      VarStruct('Translation', [1033, 1200])
+    ])
+  ]
+)

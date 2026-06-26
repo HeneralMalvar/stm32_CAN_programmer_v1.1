@@ -1,0 +1,150 @@
+=== Session started 20260625_151206 ===
+2026-06-25T15:12:10.172480: Detecting IXXAT interface...
+2026-06-25T15:12:10.368648: ✓ IXXAT detected successfully
+2026-06-25T15:12:16.927415: Selected firmware: C:/Users/trans/Desktop/canprog/JLG_TEST/JBOX3_V54_Test.hex
+2026-06-25T15:12:18.937548: Reading bootloader information...
+2026-06-25T15:12:18.949745: Opening IXXAT bootloader CAN bus @125 kbit/s... initial connection, attempt 1/5
+2026-06-25T15:12:19.825054: Connecting to STM32 bootloader...
+2026-06-25T15:12:19.827039: [15:12:19] canprog INFO: Connecting target
+2026-06-25T15:12:19.830068: [15:12:19] canprog INFO: Bootloader initialized
+2026-06-25T15:12:19.837479: [15:12:19] canprog INFO: Bootloader version: 2.0
+2026-06-25T15:12:19.840847: [15:12:19] canprog INFO: Read protection: 0x0000
+2026-06-25T15:12:19.842957: [15:12:19] canprog INFO: Chip ID: 0x0411 - STM32F2xxxx
+2026-06-25T15:12:19.843350: [15:12:19] canprog INFO: Connected
+2026-06-25T15:12:20.344608: STM32 bootloader connected.
+2026-06-25T15:12:20.347070: [15:12:20] canprog INFO: Reading memory at 0x08000000:16
+2026-06-25T15:12:20.348315: [15:12:20] canprog INFO: Progress: 0%
+2026-06-25T15:12:20.350850: [15:12:20] canprog INFO: Progress: 100%
+2026-06-25T15:12:20.353514: [15:12:20] canprog INFO: Successful
+2026-06-25T15:12:20.354349: [15:12:20] canprog INFO: Disconnecting target
+2026-06-25T15:12:20.355137: [15:12:20] canprog INFO: Disconnected
+2026-06-25T15:12:20.356710: ✓ Operation successful: Completed in 1.4s
+2026-06-25T15:12:23.332195: Starting integrated flash: C:/Users/trans/Desktop/canprog/JLG_TEST/JBOX3_V54_Test.hex
+2026-06-25T15:12:23.336575: Opening IXXAT bootloader CAN bus @125 kbit/s... initial connection, attempt 1/5
+2026-06-25T15:12:24.209705: Connecting to STM32 bootloader...
+2026-06-25T15:12:24.211608: [15:12:24] canprog INFO: Connecting target
+2026-06-25T15:12:24.214023: [15:12:24] canprog INFO: Bootloader initialized
+2026-06-25T15:12:24.220425: [15:12:24] canprog INFO: Bootloader version: 2.0
+2026-06-25T15:12:24.223349: [15:12:24] canprog INFO: Read protection: 0x0000
+2026-06-25T15:12:24.225484: [15:12:24] canprog INFO: Chip ID: 0x0411 - STM32F2xxxx
+2026-06-25T15:12:24.225859: [15:12:24] canprog INFO: Connected
+2026-06-25T15:12:24.727752: STM32 bootloader connected.
+2026-06-25T15:12:24.730068: [15:12:24] canprog INFO: Erasing memory. Please wait...
+2026-06-25T15:12:24.733217: [15:12:24] canprog INFO: Mass erasing. Please wait..
+2026-06-25T15:12:25.730445: [15:12:25] canprog INFO: Waiting... 1s
+2026-06-25T15:12:26.730735: [15:12:26] canprog INFO: Waiting... 2s
+2026-06-25T15:12:27.730922: [15:12:27] canprog INFO: Waiting... 3s
+2026-06-25T15:12:28.731459: [15:12:28] canprog INFO: Waiting... 4s
+2026-06-25T15:12:29.731947: [15:12:29] canprog INFO: Waiting... 5s
+2026-06-25T15:12:30.732361: [15:12:30] canprog INFO: Waiting... 6s
+2026-06-25T15:12:31.732529: [15:12:31] canprog INFO: Waiting... 7s
+2026-06-25T15:12:32.732747: [15:12:32] canprog INFO: Waiting... 8s
+2026-06-25T15:12:33.733124: [15:12:33] canprog INFO: Waiting... 9s
+2026-06-25T15:12:34.733432: [15:12:34] canprog INFO: Waiting... 10s
+2026-06-25T15:12:35.733696: [15:12:35] canprog INFO: Waiting... 11s
+2026-06-25T15:12:36.734073: [15:12:36] canprog INFO: Waiting... 12s
+2026-06-25T15:12:37.734329: [15:12:37] canprog INFO: Waiting... 13s
+2026-06-25T15:12:38.734610: [15:12:38] canprog INFO: Waiting... 14s
+2026-06-25T15:12:39.122446: [15:12:39] canprog INFO: Successful
+2026-06-25T15:12:39.125213: Erase completed successfully.
+2026-06-25T15:12:39.125542: Waiting 2 seconds before write...
+2026-06-25T15:12:41.122929: Recovery reconnect: after erase, attempt 1/5
+2026-06-25T15:12:41.123714: [15:12:41] canprog INFO: Disconnecting target
+2026-06-25T15:12:41.124081: [15:12:41] canprog INFO: Disconnected
+2026-06-25T15:12:43.143185: Re-opening IXXAT bootloader CAN bus @125 kbit/s...
+2026-06-25T15:12:44.216023: Reconnecting to STM32 bootloader...
+2026-06-25T15:12:44.217168: [15:12:44] canprog INFO: Connecting target
+2026-06-25T15:12:44.220106: [15:12:44] canprog INFO: Bootloader initialized
+2026-06-25T15:12:44.227653: [15:12:44] canprog INFO: Bootloader version: 2.0
+2026-06-25T15:12:44.231166: [15:12:44] canprog INFO: Read protection: 0x0000
+2026-06-25T15:12:44.235116: [15:12:44] canprog INFO: Chip ID: 0x0411 - STM32F2xxxx
+2026-06-25T15:12:44.235626: [15:12:44] canprog INFO: Connected
+2026-06-25T15:12:45.241787: Recovery reconnect successful.
+2026-06-25T15:12:45.245497: Reconnect successful. Starting write operation...
+2026-06-25T15:12:45.246063: Writing segment at 0x08000000, size 20720 bytes... attempt 1/5
+2026-06-25T15:12:45.246448: [15:12:45] canprog INFO: Writing memory at 0x08000000:20720
+2026-06-25T15:12:45.247035: [15:12:45] canprog INFO: Progress: 0%
+2026-06-25T15:12:45.259169: RAW WRITE ERROR attempt 1/5: Error warning limit exceeded
+2026-06-25T15:12:45.259537: Write failed at 0%. Reconnecting IXXAT and retrying write...
+2026-06-25T15:12:45.259818: Recovery reconnect: write failed at 0%, attempt 1/5, attempt 1/5
+2026-06-25T15:12:45.260131: [15:12:45] canprog INFO: Disconnecting target
+2026-06-25T15:12:45.260397: [15:12:45] canprog INFO: Disconnected
+2026-06-25T15:12:47.278176: Re-opening IXXAT bootloader CAN bus @125 kbit/s...
+2026-06-25T15:12:48.350239: Reconnecting to STM32 bootloader...
+2026-06-25T15:12:48.351243: [15:12:48] canprog INFO: Connecting target
+2026-06-25T15:12:48.355206: [15:12:48] canprog INFO: Bootloader initialized
+2026-06-25T15:12:48.361529: [15:12:48] canprog INFO: Bootloader version: 2.0
+2026-06-25T15:12:48.365984: [15:12:48] canprog INFO: Read protection: 0x0000
+2026-06-25T15:12:48.367442: [15:12:48] canprog INFO: Chip ID: 0x0411 - STM32F2xxxx
+2026-06-25T15:12:48.368398: [15:12:48] canprog INFO: Connected
+2026-06-25T15:12:49.366929: Recovery reconnect successful.
+2026-06-25T15:12:50.367753: Writing segment at 0x08000000, size 20720 bytes... attempt 2/5
+2026-06-25T15:12:50.368679: [15:12:50] canprog INFO: Writing memory at 0x08000000:20720
+2026-06-25T15:12:50.369418: [15:12:50] canprog INFO: Progress: 0%
+2026-06-25T15:12:50.882452: [15:12:50] canprog INFO: Progress: 11%
+2026-06-25T15:12:51.336097: [15:12:51] canprog INFO: Progress: 21%
+2026-06-25T15:12:51.849684: [15:12:51] canprog INFO: Progress: 32%
+2026-06-25T15:12:52.314945: [15:12:52] canprog INFO: Progress: 42%
+2026-06-25T15:12:52.828390: [15:12:52] canprog INFO: Progress: 53%
+2026-06-25T15:12:53.284396: [15:12:53] canprog INFO: Progress: 63%
+2026-06-25T15:12:53.823156: [15:12:53] canprog INFO: Progress: 74%
+2026-06-25T15:12:54.300163: [15:12:54] canprog INFO: Progress: 84%
+2026-06-25T15:12:54.835065: [15:12:54] canprog INFO: Progress: 95%
+2026-06-25T15:12:55.072547: [15:12:55] canprog INFO: Progress: 100%
+2026-06-25T15:12:55.075445: [15:12:55] canprog INFO: Successful
+2026-06-25T15:12:55.373035: Writing completed successfully.
+2026-06-25T15:12:55.373600: Reconnecting before verification...
+2026-06-25T15:12:55.373929: Recovery reconnect: before verification, attempt 1/5
+2026-06-25T15:12:55.374232: [15:12:55] canprog INFO: Disconnecting target
+2026-06-25T15:12:55.374529: [15:12:55] canprog INFO: Disconnected
+2026-06-25T15:12:57.393910: Re-opening IXXAT bootloader CAN bus @125 kbit/s...
+2026-06-25T15:12:58.466263: Reconnecting to STM32 bootloader...
+2026-06-25T15:12:58.467800: [15:12:58] canprog INFO: Connecting target
+2026-06-25T15:12:58.474108: RAW RECOVERY CONNECT ERROR attempt 1/5: Error warning limit exceeded
+2026-06-25T15:12:59.993481: Recovery reconnect: before verification, attempt 2/5
+2026-06-25T15:13:01.994974: Re-opening IXXAT bootloader CAN bus @125 kbit/s...
+2026-06-25T15:13:03.067779: Reconnecting to STM32 bootloader...
+2026-06-25T15:13:03.069561: [15:13:03] canprog INFO: Connecting target
+2026-06-25T15:13:03.075084: [15:13:03] canprog INFO: Bootloader initialized
+2026-06-25T15:13:03.079371: [15:13:03] canprog INFO: Bootloader version: 2.0
+2026-06-25T15:13:03.084442: [15:13:03] canprog INFO: Read protection: 0x0000
+2026-06-25T15:13:03.085283: [15:13:03] canprog INFO: Chip ID: 0x0411 - STM32F2xxxx
+2026-06-25T15:13:03.088522: [15:13:03] canprog INFO: Connected
+2026-06-25T15:13:04.092634: Recovery reconnect successful.
+2026-06-25T15:13:04.093556: Verifying segment at 0x08000000, size 20720 bytes... attempt 1/5
+2026-06-25T15:13:04.093941: [15:13:04] canprog INFO: Verifying memory at 0x08000000:20720
+2026-06-25T15:13:04.094468: [15:13:04] canprog INFO: Progress: 0%
+2026-06-25T15:13:04.106747: RAW VERIFY ERROR attempt 1/5: Error warning limit exceeded
+2026-06-25T15:13:04.107286: Verify failed. Reconnecting IXXAT and retrying verification...
+2026-06-25T15:13:04.107716: Recovery reconnect: verify failed, attempt 1/5, attempt 1/5
+2026-06-25T15:13:04.108097: [15:13:04] canprog INFO: Disconnecting target
+2026-06-25T15:13:04.108428: [15:13:04] canprog INFO: Disconnected
+2026-06-25T15:13:06.126212: Re-opening IXXAT bootloader CAN bus @125 kbit/s...
+2026-06-25T15:13:07.199435: Reconnecting to STM32 bootloader...
+2026-06-25T15:13:07.200353: [15:13:07] canprog INFO: Connecting target
+2026-06-25T15:13:07.203040: [15:13:07] canprog INFO: Bootloader initialized
+2026-06-25T15:13:07.209349: [15:13:07] canprog INFO: Bootloader version: 2.0
+2026-06-25T15:13:07.214367: [15:13:07] canprog INFO: Read protection: 0x0000
+2026-06-25T15:13:07.215217: [15:13:07] canprog INFO: Chip ID: 0x0411 - STM32F2xxxx
+2026-06-25T15:13:07.215899: [15:13:07] canprog INFO: Connected
+2026-06-25T15:13:08.215069: Recovery reconnect successful.
+2026-06-25T15:13:09.216870: Verifying segment at 0x08000000, size 20720 bytes... attempt 2/5
+2026-06-25T15:13:09.218843: [15:13:09] canprog INFO: Verifying memory at 0x08000000:20720
+2026-06-25T15:13:09.220221: [15:13:09] canprog INFO: Progress: 0%
+2026-06-25T15:13:09.506877: [15:13:09] canprog INFO: Progress: 11%
+2026-06-25T15:13:09.762223: [15:13:09] canprog INFO: Progress: 21%
+2026-06-25T15:13:10.049876: [15:13:10] canprog INFO: Progress: 32%
+2026-06-25T15:13:10.305692: [15:13:10] canprog INFO: Progress: 42%
+2026-06-25T15:13:10.592867: [15:13:10] canprog INFO: Progress: 53%
+2026-06-25T15:13:10.849289: [15:13:10] canprog INFO: Progress: 63%
+2026-06-25T15:13:11.136895: [15:13:11] canprog INFO: Progress: 74%
+2026-06-25T15:13:11.393193: [15:13:11] canprog INFO: Progress: 84%
+2026-06-25T15:13:11.681032: [15:13:11] canprog INFO: Progress: 95%
+2026-06-25T15:13:11.810647: [15:13:11] canprog INFO: Progress: 100%
+2026-06-25T15:13:11.813360: [15:13:11] canprog INFO: Successful
+2026-06-25T15:13:12.112460: Starting application...
+2026-06-25T15:13:12.114648: [15:13:12] canprog INFO: Starting application
+2026-06-25T15:13:12.121966: [15:13:12] canprog INFO: Successful
+2026-06-25T15:13:12.122444: [15:13:12] canprog INFO: Disconnecting target
+2026-06-25T15:13:12.122958: [15:13:12] canprog INFO: Disconnected
+2026-06-25T15:13:12.125815: ✓ Operation successful: Completed in 48.8s

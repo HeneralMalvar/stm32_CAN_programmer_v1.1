@@ -1,0 +1,1 @@
+python -m PyInstaller --clean --noconfirm --onefile --windowed --icon=assets\favicon.ico --version-file=version.txt --paths . --collect-submodules canprog --hidden-import can.interfaces.ixxat --hidden-import can.interfaces.ixxat.canlib --hidden-import can.interfaces.ixxat.canlib_vcinpl gui\stm32_CAN_programmer_v1.0.py
