@@ -29,7 +29,7 @@ import time
 from canprog.logger import log
 
 if 'win' in sys.platform.lower():
-    current_time = time.clock
+    current_time = time.perf_counter
 else:
     current_time = time.time
     
