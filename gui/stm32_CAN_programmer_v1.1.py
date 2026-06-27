@@ -8,10 +8,11 @@ BOOTLOADER_BITRATE = 125000
 from PyQt6.QtWidgets import (
     QApplication, QMessageBox, QWidget, QLabel, QPushButton, QComboBox,
     QVBoxLayout, QHBoxLayout, QGridLayout, QFileDialog,
-    QLineEdit, QTextEdit, QProgressBar, QCheckBox, QGroupBox
+    QLineEdit, QTextEdit, QProgressBar, QCheckBox, QGroupBox, QFrame,
+    QScrollArea
 )
-from PyQt6.QtCore import QThread, pyqtSignal, QTimer
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import QThread, pyqtSignal, QTimer, Qt
+from PyQt6.QtGui import QFont, QColor, QIcon
 
 
 class WorkerBase(QThread):
@@ -102,7 +103,6 @@ class IntegratedCanprogWorker(WorkerBase):
                 def __init__(self, callback):
                     super().__init__()
                     self.callback = callback
-                    
 
                 def emit(self, record):
                     try:
@@ -263,7 +263,6 @@ class IntegratedCanprogWorker(WorkerBase):
                     raise last_error
 
                 if self.erase_enabled:
-                    
                     erase(protocol, [])
                     self.progress_signal.emit(15)
 
@@ -279,17 +278,6 @@ class IntegratedCanprogWorker(WorkerBase):
                     raise InterruptedError("Cancelled by user")
 
                 datafile.load(self.hex_file, 'hex', self.address)
-
-                # for segment_address, data in datafile.get_segments():
-                #     if self.cancel_flag:
-                #         raise InterruptedError("Cancelled by user")
-
-                #     self._emit_log(
-                #         f"Writing segment at 0x{segment_address:08X}, size {len(data)} bytes..."
-                #     )
-
-                #     write(protocol, segment_address, data)
-                #     time.sleep(0.2)
 
                 WRITE_RETRY_LIMIT = 5
 
@@ -345,8 +333,6 @@ class IntegratedCanprogWorker(WorkerBase):
                         raise RuntimeError("Write failed after retry limit.")
 
                     time.sleep(0.3)
-
-                #####
 
                 if self.verify_enabled:
                     self._emit_log("Writing completed successfully.")
@@ -508,8 +494,10 @@ class AppTestWorker(WorkerBase):
 class STM32FactoryProgrammer(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Transcell PH | STM32 CAN Flasher v1.1 (Trial)")
-        self.resize(1200, 700)
+        self.setWindowTitle("Transcell PH | STM32 CAN Flasher v1.2 (Factory)")
+        self.resize(1500, 850)
+        self.setMinimumSize(1200, 700)
+        
         self.current_worker = None
         self.log_file = None
         self.tx_count = 0
@@ -518,9 +506,8 @@ class STM32FactoryProgrammer(QWidget):
         self.fail_count = 0
         self.setup_logging()
         self.workers = []
+        self.apply_styles()
         self.init_ui()
-        
-        
 
     def setup_logging(self):
         log_dir = "factory_logs"
@@ -551,225 +538,544 @@ class STM32FactoryProgrammer(QWidget):
         if "Bootloader version:" in message:
             version = message.split("Bootloader version:")[1].strip()
             self.lbl_boot_ver.setText(version)
-            self.lbl_boot_ver.setStyleSheet("color: #3fb950; font-weight: bold;")
+            self.lbl_boot_ver.setStyleSheet("color: #56d84f; font-weight: 900; font-size: 18px;")
         elif "Chip ID:" in message:
             chip = message.split("Chip ID:")[1].strip()
             self.lbl_chip_id.setText(chip)
-            self.lbl_chip_id.setStyleSheet("color: #3fb950; font-weight: bold;")
+            self.lbl_chip_id.setStyleSheet("color: #56d84f; font-weight: 900; font-size: 18px;")
 
         # Phase/status detection
         if "Mass erasing" in message:
-            self.lbl_status.setText("Erasing Flash...")
-            self.lbl_status.setStyleSheet("color: #f2cc60; font-weight: bold;")
+            self.lbl_status.setText("🗑️ Erasing Flash...")
+            self.lbl_status.setStyleSheet("color: #f9b44a; font-weight: bold; font-size: 16px;")
         elif "Writing memory" in message:
-            self.lbl_status.setText("Writing Firmware...")
-            self.lbl_status.setStyleSheet("color: #58a6ff; font-weight: bold;")
+            self.lbl_status.setText("✍️ Writing Firmware...")
+            self.lbl_status.setStyleSheet("color: #2d8cff; font-weight: bold; font-size: 16px;")
         elif "Verifying memory" in message:
-            self.lbl_status.setText("Verifying Firmware...")
-            self.lbl_status.setStyleSheet("color: #bc8cff; font-weight: bold;")
+            self.lbl_status.setText("✓ Verifying Firmware...")
+            self.lbl_status.setStyleSheet("color: #a78bfa; font-weight: bold; font-size: 16px;")
         elif "Starting application" in message:
-            self.lbl_status.setText("Starting Application...")
-            self.lbl_status.setStyleSheet("color: #3fb950; font-weight: bold;")
+            self.lbl_status.setText("▶️ Starting Application...")
+            self.lbl_status.setStyleSheet("color: #56d84f; font-weight: bold; font-size: 16px;")
 
     def update_stats(self):
         self.lbl_stats.setText(
             f"TX: {self.tx_count} | RX: {self.rx_count} | OK: {self.ok_count} | FAIL: {self.fail_count}"
         )
 
-    def init_ui(self):
-        outer = QHBoxLayout(self)
-        outer.setSpacing(15)
-
-        left = QVBoxLayout()
-        left.setSpacing(10)
-
-        # Header
-        header = QGroupBox()
-        header.setStyleSheet("border:0;")
-        hbox = QHBoxLayout(header)
-        title = QLabel("STM32 CAN Bootloader")
-        title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        self.lbl_online = QLabel("● OFFLINE")
-        self.lbl_online.setStyleSheet("color: #ff4d4d; font-weight: bold; font-size: 12px;")
-        hbox.addWidget(title)
-        hbox.addStretch()
-        hbox.addWidget(self.lbl_online)
-        left.addWidget(header)
-
-        # Connection
-        conn_group = QGroupBox("CAN Interface")
-        grid = QGridLayout(conn_group)
-        grid.addWidget(QLabel("Interface:"), 0, 0)
-        self.cmb_interface = QComboBox()
-        self.cmb_interface.addItems(["IXXAT USB-CAN V2"])
-        grid.addWidget(self.cmb_interface, 0, 1)
-        grid.addWidget(QLabel("Bitrate:"), 1, 0)
-        self.cmb_bitrate = QComboBox()
-        self.cmb_bitrate.addItems(["125 kbit/s", "250 kbit/s", "500 kbit/s", "1000 kbit/s"])
-        grid.addWidget(self.cmb_bitrate, 1, 1)
-        self.btn_connect = QPushButton("Connect")
-        self.btn_connect.clicked.connect(self.connect_can)
-        grid.addWidget(self.btn_connect, 0, 2, 2, 1)
-        left.addWidget(conn_group)
-
-        # Bootloader info
-        info_group = QGroupBox("Bootloader Info")
-        info_grid = QGridLayout(info_group)
-        info_grid.addWidget(QLabel("Bootloader Version:"), 0, 0)
-        self.lbl_boot_ver = QLabel("Not Read")
-        self.lbl_boot_ver.setStyleSheet("color: #f2cc60; font-weight: bold;")
-        info_grid.addWidget(self.lbl_boot_ver, 0, 1)
-        info_grid.addWidget(QLabel("Chip ID:"), 1, 0)
-        self.lbl_chip_id = QLabel("Unknown")
-        self.lbl_chip_id.setStyleSheet("color: #f2cc60; font-weight: bold;")
-        info_grid.addWidget(self.lbl_chip_id, 1, 1)
-        info_grid.addWidget(QLabel("Bootloader bitrate:"), 2, 0)
-        info_grid.addWidget(QLabel("125 kbit/s"), 2, 1)
-        left.addWidget(info_group)
-
-        # Firmware
-        fw_group = QGroupBox("Firmware")
-        fw_layout = QGridLayout(fw_group)
-        self.txt_firmware = QLineEdit()
-        self.txt_firmware.setPlaceholderText("Path to .hex file")
-        self.btn_browse = QPushButton("...")
-        self.btn_browse.clicked.connect(self.browse_firmware)
-        fw_layout.addWidget(QLabel("File:"), 0, 0)
-        fw_layout.addWidget(self.txt_firmware, 0, 1)
-        fw_layout.addWidget(self.btn_browse, 0, 2)
-        self.lbl_file_info = QLabel("No file selected")
-        self.lbl_file_info.setStyleSheet("color: #aaa; font-size: 11px;")
-        fw_layout.addWidget(self.lbl_file_info, 1, 1, 1, 2)
-        left.addWidget(fw_group)
-
-        # Actions
-        action_group = QGroupBox("Actions")
-        vbox = QVBoxLayout(action_group)
-        self.btn_read_info = QPushButton("📄 Read Device Info")
-        self.btn_read_info.clicked.connect(self.read_device_info)
-        vbox.addWidget(self.btn_read_info)
-
-        self.btn_test_app = QPushButton("🧪 Test Application CAN")
-        self.btn_test_app.clicked.connect(self.test_application_can)
-        vbox.addWidget(self.btn_test_app)
-
-        self.btn_full_flash = QPushButton("⚡ Flash Firmware")
-        self.btn_full_flash.clicked.connect(self.flash_firmware)
-        self.btn_full_flash.setStyleSheet("background-color: #1a5fb4; color: white; font-weight: bold;")
-        vbox.addWidget(self.btn_full_flash)
-
-        self.chk_skip_erase = QCheckBox("Skip erase (only if already blank)")
-        vbox.addWidget(self.chk_skip_erase)
-        left.addWidget(action_group)
-
-        # Progress
-        prog_group = QGroupBox("Progress")
-        prog_layout = QVBoxLayout(prog_group)
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        prog_layout.addWidget(self.progress_bar)
-        self.lbl_status = QLabel("Ready")
-        self.lbl_status.setStyleSheet("font-weight: bold; color: #888;")
-        prog_layout.addWidget(self.lbl_status)
-        left.addWidget(prog_group)
-
-        left.addStretch()
-        outer.addLayout(left, 40)
-
-        # Right panel - Console
-        right = QVBoxLayout()
-        console_group = QGroupBox("Log")
-        console_layout = QVBoxLayout(console_group)
-        self.console = QTextEdit()
-        self.console.setReadOnly(True)
-        self.console.setFont(QFont("Consolas", 10))
-        self.console.setPlainText(
-            "STM32 CAN Bootloader Programmer\n"
-            "Integrated CANPROG Engine\n"
-            "System Ready. Click Connect to detect IXXAT interface."
-        )
-        console_layout.addWidget(self.console)
-
-        toolbar = QHBoxLayout()
-        self.btn_clear = QPushButton("Clear")
-        self.btn_clear.clicked.connect(self.console.clear)
-        self.btn_save_log = QPushButton("Save Log")
-        self.btn_save_log.clicked.connect(self.save_log)
-        toolbar.addWidget(self.btn_clear)
-        toolbar.addWidget(self.btn_save_log)
-        toolbar.addStretch()
-        console_layout.addLayout(toolbar)
-        right.addWidget(console_group, 1)
-
-        # Footer
-        footer = QHBoxLayout()
-        self.lbl_footer = QLabel("Factory Mode | Ready")
-        footer.addWidget(self.lbl_footer)
-        footer.addStretch()
-        self.lbl_stats = QLabel("TX: 0 | RX: 0 | OK: 0 | FAIL: 0")
-        footer.addWidget(self.lbl_stats)
-        right.addLayout(footer)
-        outer.addLayout(right, 60)
-
-        self.apply_styles()
-        self.update_ui_state(False)
-        self.btn_browse.setEnabled(False)
-        self.btn_read_info.setEnabled(False)
-        self.btn_test_app.setEnabled(False)
-        self.btn_full_flash.setEnabled(False)
-
     def apply_styles(self):
+        """Apply the modern HTML-inspired dark theme with enhanced animations and colors."""
         self.setStyleSheet("""
-            QWidget { background-color: #0d1117; color: #c9d1d9; }
+            QWidget {
+                background-color: #071018;
+                color: #f2f6fb;
+                font-family: "Segoe UI", Arial, sans-serif;
+            }
+            
+            QLabel {
+                color: #f2f6fb;
+                background-color: transparent;
+            }
+            
             QGroupBox {
-                border: 1px solid #30363d;
-                border-radius: 6px;
+                border: 1px solid rgba(120, 150, 180, 0.22);
+                border-radius: 12px;
                 margin-top: 12px;
-                padding-top: 10px;
-                font-weight: bold;
+                padding-top: 12px;
+                padding-left: 12px;
+                padding-right: 12px;
+                padding-bottom: 12px;
+                background: linear-gradient(180deg, rgba(28, 43, 58, 0.88), rgba(13, 24, 35, 0.88));
+                color: #f2f6fb;
+                font-weight: 700;
+                font-size: 18px;
             }
+            
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 3px 0 3px;
+            }
+            
             QPushButton {
-                background-color: #21262d;
-                border: 1px solid #30363d;
-                border-radius: 4px;
-                padding: 8px 12px;
-                font-weight: bold;
+                background: linear-gradient(180deg, rgba(44, 60, 78, 0.86), rgba(27, 39, 52, 0.9));
+                border: 1px solid rgba(130, 157, 189, 0.34);
+                border-radius: 8px;
+                padding: 10px 18px;
+                color: #eef5ff;
+                font-weight: 700;
+                font-size: 15px;
+                min-height: 46px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            QPushButton:hover { background-color: #30363d; }
-            QPushButton:disabled { color: #666; background-color: #161b22; }
+            
+            QPushButton:hover {
+                background: linear-gradient(180deg, #4a7fc7, #2d5a9e);
+                border: 2px solid #2d8cff;
+                box-shadow: 0 0 20px rgba(45, 140, 255, 0.35);
+                color: #ffffff;
+            }
+            
+            QPushButton:pressed {
+                background: linear-gradient(180deg, #1f4a7a, #132d52);
+                border: 2px solid #1f64d4;
+            }
+            
+            QPushButton#btnConnect {
+                background: linear-gradient(180deg, rgba(60, 80, 100, 0.9), rgba(40, 55, 75, 0.95));
+                border: 1px solid rgba(100, 140, 180, 0.5);
+            }
+            
+            QPushButton#btnConnect:hover {
+                background: linear-gradient(180deg, #5a9ef0, #2b7dd9);
+                border: 2px solid #58a6ff;
+                box-shadow: 0 0 25px rgba(88, 166, 255, 0.4);
+            }
+            
+            QPushButton#btnFlash {
+                background: linear-gradient(180deg, #2f8cff, #1f64d4);
+                border: 2px solid rgba(45, 140, 255, 0.6);
+                color: #ffffff;
+                font-weight: 800;
+                font-size: 16px;
+                min-height: 84px;
+                box-shadow: 0 8px 24px rgba(31, 100, 212, 0.25);
+            }
+            
+            QPushButton#btnFlash:hover {
+                background: linear-gradient(180deg, #4d9cff, #3075e8);
+                border: 2px solid #7cb3ff;
+                box-shadow: 0 12px 32px rgba(45, 140, 255, 0.45);
+            }
+            
+            QPushButton#btnFlash:pressed {
+                background: linear-gradient(180deg, #1f64d4, #154bb8);
+                border: 2px solid #1f64d4;
+                box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+            
+            QPushButton#btnRead, QPushButton#btnTest {
+                background: linear-gradient(180deg, rgba(50, 70, 90, 0.9), rgba(30, 45, 60, 0.95));
+                border: 1px solid rgba(92, 151, 255, 0.3);
+            }
+            
+            QPushButton#btnRead:hover, QPushButton#btnTest:hover {
+                background: linear-gradient(180deg, #4a8bcc, #2d5a9e);
+                border: 2px solid #4aa3ff;
+                box-shadow: 0 0 20px rgba(74, 163, 255, 0.35);
+            }
+            
+            QPushButton#btnRead:pressed, QPushButton#btnTest:pressed {
+                background: linear-gradient(180deg, #1f4a7a, #132d52);
+                border: 2px solid #2b5aa0;
+            }
+            
+            QPushButton#btnClear, QPushButton#btnSave {
+                background: linear-gradient(180deg, rgba(45, 60, 75, 0.8), rgba(30, 40, 55, 0.85));
+                border: 1px solid rgba(110, 130, 160, 0.4);
+                min-width: 122px;
+            }
+            
+            QPushButton#btnClear:hover, QPushButton#btnSave:hover {
+                background: linear-gradient(180deg, #4a7fa0, #2d5270);
+                border: 2px solid #6ba3d0;
+                box-shadow: 0 0 15px rgba(107, 163, 208, 0.3);
+            }
+            
+            QPushButton:disabled {
+                opacity: 0.35;
+                background: linear-gradient(180deg, rgba(70, 84, 101, 0.5), rgba(44, 55, 68, 0.5));
+                border: 1px solid rgba(130, 157, 189, 0.15);
+                color: #666;
+                box-shadow: none;
+            }
+            
             QLineEdit, QComboBox {
-                background-color: #0d1117;
-                border: 1px solid #30363d;
-                border-radius: 4px;
-                padding: 6px;
+                background: rgba(4, 12, 19, 0.48);
+                border: 1px solid rgba(127, 154, 185, 0.36);
+                border-radius: 8px;
+                padding: 8px 14px;
+                color: #f2f6fb;
+                font-size: 15px;
+                height: 43px;
+                selection-background-color: rgba(45, 140, 255, 0.3);
+                transition: all 0.2s ease;
             }
+            
+            QLineEdit:focus, QComboBox:focus {
+                border: 2px solid #2d8cff;
+                background: rgba(4, 12, 19, 0.70);
+                box-shadow: 0 0 12px rgba(45, 140, 255, 0.2);
+            }
+            
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 10px;
+            }
+            
+            QComboBox::down-arrow {
+                image: none;
+                width: 10px;
+                height: 10px;
+            }
+            
             QTextEdit {
-                background-color: #0d1117;
-                border: 1px solid #30363d;
-                font-family: Consolas;
-                color: #c9d1d9;
+                background: rgba(2, 8, 13, 0.72);
+                border: 1px solid rgba(127, 154, 185, 0.23);
+                border-radius: 8px;
+                color: #d9e2ec;
+                font-family: Consolas, "Courier New", monospace;
+                font-size: 13px;
+                padding: 12px 20px;
             }
+            
             QProgressBar {
-                border: 1px solid #30363d;
-                border-radius: 4px;
+                border: 1px solid rgba(255,255,255,0.06);
+                border-radius: 7px;
+                background: rgba(255,255,255,0.05);
+                height: 28px;
                 text-align: center;
-                background-color: #0d1117;
-                height: 16px;
+                color: white;
+                font-weight: 800;
+                font-size: 12px;
             }
+            
             QProgressBar::chunk {
-                background-color: #238636;
-                border-radius: 4px;
+                background: linear-gradient(90deg, #4fb63b, #5bd249);
+                border-radius: 6px;
+                box-shadow: 0 0 8px rgba(95, 210, 73, 0.4);
+            }
+            
+            QCheckBox {
+                color: #cbd5e1;
+                font-size: 14px;
+                spacing: 10px;
+            }
+            
+            QCheckBox::indicator {
+                width: 20px;
+                height: 20px;
+                border-radius: 5px;
+                border: 1px solid rgba(127, 154, 185, 0.48);
+                background: rgba(4, 12, 19, 0.45);
+                transition: all 0.15s ease;
+            }
+            
+            QCheckBox::indicator:hover {
+                border: 2px solid #2d8cff;
+                background: rgba(4, 12, 19, 0.65);
+                box-shadow: 0 0 8px rgba(45, 140, 255, 0.25);
+            }
+            
+            QCheckBox::indicator:checked {
+                background: linear-gradient(135deg, #2d8cff, #1f64d4);
+                border: 2px solid #4aa3ff;
+                box-shadow: 0 0 12px rgba(45, 140, 255, 0.4);
+            }
+            
+            QFrame#titleFrame {
+                background: rgba(6, 13, 20, 0.72);
+                border-bottom: 1px solid rgba(120, 150, 180, 0.22);
+            }
+            
+            QFrame#footerFrame {
+                background: rgba(5, 12, 18, 0.75);
+                border-top: 1px solid rgba(120, 150, 180, 0.22);
+            }
+            
+            QScrollArea {
+                background: transparent;
+                border: none;
             }
         """)
 
-    def update_ui_state(self, busy):
-        self.btn_connect.setEnabled(not busy)
-        self.btn_browse.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE")
-        self.btn_read_info.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE")
-        self.btn_test_app.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE")
-        self.btn_full_flash.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE" and self.txt_firmware.text().lower().endswith(".hex"))
-        self.cmb_interface.setEnabled(not busy)
-        self.cmb_bitrate.setEnabled(not busy)
+    def init_ui(self):
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # Title bar
+        title_frame = QFrame()
+        title_frame.setObjectName("titleFrame")
+        title_frame.setFixedHeight(54)
+        title_layout = QHBoxLayout(title_frame)
+        title_layout.setContentsMargins(22, 0, 22, 0)
+        title_layout.setSpacing(12)
+
+        title_icon = QLabel("⚙")
+        title_icon.setStyleSheet("font-size: 16px; color: #2d8cff; font-weight: bold;")
+        title_text = QLabel("Transcell PH | STM32 CAN Flasher v1.2 (Factory)")
+        title_text.setFont(QFont("Segoe UI", 14, QFont.Weight.DemiBold))
+        title_layout.addWidget(title_icon)
+        title_layout.addWidget(title_text)
+        title_layout.addStretch()
+
+        main_layout.addWidget(title_frame)
+
+        # Content area
+        content_layout = QHBoxLayout()
+        content_layout.setContentsMargins(18, 18, 20, 14)
+        content_layout.setSpacing(20)
+
+        # Left column with scroll
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        left_widget = QWidget()
+        left_layout = self.create_left_column()
+        left_widget.setLayout(left_layout)
+        left_scroll.setWidget(left_widget)
+        content_layout.addWidget(left_scroll, 41)
+
+        # Right column
+        right_layout = self.create_right_column()
+        content_layout.addLayout(right_layout, 59)
+
+        main_layout.addLayout(content_layout, 1)
+
+        # Footer
+        footer_frame = QFrame()
+        footer_frame.setObjectName("footerFrame")
+        footer_frame.setFixedHeight(48)
+        footer_layout = QHBoxLayout(footer_frame)
+        footer_layout.setContentsMargins(24, 0, 24, 0)
+
+        footer_left = QLabel("⚙ Factory Mode | Ready")
+        footer_left.setStyleSheet("color: #c9d1d9; font-size: 14px; font-weight: 600;")
+
+        self.lbl_stats = QLabel("TX: 0 | RX: 0 | OK: 0 | FAIL: 0")
+        self.lbl_stats.setStyleSheet("color: #c9d1d9; font-size: 14px; font-weight: 600;")
+
+        footer_layout.addWidget(footer_left)
+        footer_layout.addStretch()
+        footer_layout.addWidget(self.lbl_stats)
+
+        main_layout.addWidget(footer_frame)
+
+    def create_left_column(self):
+        """Create the left column with controls."""
+        layout = QVBoxLayout()
+        layout.setSpacing(14)
+
+        # Header with product title and online status
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(10, 0, 10, 2)
+        header_layout.setSpacing(14)
+
+        product_icon = QLabel("⚡")
+        product_icon.setStyleSheet("font-size: 30px; color: #2d8cff;")
+        product_title = QLabel("STM32 CAN Bootloader")
+        product_title.setFont(QFont("Segoe UI", 26, QFont.Weight.ExtraBold))
+
+        header_layout.addWidget(product_icon)
+        header_layout.addWidget(product_title)
+        header_layout.addStretch()
+
+        self.lbl_online = QLabel("● ONLINE")
+        self.lbl_online.setStyleSheet("color: #56d84f; font-weight: 700; font-size: 14px;")
+        header_layout.addWidget(self.lbl_online)
+
+        layout.addLayout(header_layout)
+
+        # CAN Interface
+        can_group = QGroupBox("⌘ CAN Interface")
+        can_layout = QGridLayout(can_group)
+        can_layout.setSpacing(11)
+
+        can_layout.addWidget(QLabel("Interface:"), 0, 0)
+        self.cmb_interface = QComboBox()
+        self.cmb_interface.addItems(["IXXAT USB-CAN V2"])
+        can_layout.addWidget(self.cmb_interface, 0, 1)
+
+        can_layout.addWidget(QLabel("Bitrate:"), 1, 0)
+        self.cmb_bitrate = QComboBox()
+        self.cmb_bitrate.addItems(["125 kbit/s", "250 kbit/s", "500 kbit/s", "1000 kbit/s"])
+        can_layout.addWidget(self.cmb_bitrate, 1, 1)
+
+        self.btn_connect = QPushButton("🔗 Connect")
+        self.btn_connect.setObjectName("btnConnect")
+        self.btn_connect.clicked.connect(self.connect_can)
+        self.btn_connect.setMinimumHeight(50)
+        self.btn_connect.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        can_layout.addWidget(self.btn_connect, 0, 2, 2, 1)
+
+        layout.addWidget(can_group)
+
+        # Bootloader Info
+        info_group = QGroupBox("ⓘ Bootloader Info")
+        info_layout = QGridLayout(info_group)
+        info_layout.setSpacing(14)
+        info_layout.setVerticalSpacing(18)
+
+        lbl_boot_version_name = QLabel("Bootloader Version:")
+        lbl_boot_version_name.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        lbl_boot_version_name.setStyleSheet("color: #d9e2ec;")
+        self.lbl_boot_ver = QLabel("Not Read")
+        self.lbl_boot_ver.setFont(QFont("Segoe UI", 20, QFont.Weight.ExtraBold))
+        self.lbl_boot_ver.setStyleSheet("color: #56d84f; font-weight: 900;")
+        info_layout.addWidget(lbl_boot_version_name, 0, 0)
+        info_layout.addWidget(self.lbl_boot_ver, 0, 1, Qt.AlignmentFlag.AlignRight)
+
+        lbl_chip_id_name = QLabel("Chip ID:")
+        lbl_chip_id_name.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        lbl_chip_id_name.setStyleSheet("color: #d9e2ec;")
+        self.lbl_chip_id = QLabel("Unknown")
+        self.lbl_chip_id.setFont(QFont("Segoe UI", 20, QFont.Weight.ExtraBold))
+        self.lbl_chip_id.setStyleSheet("color: #56d84f; font-weight: 900;")
+        info_layout.addWidget(lbl_chip_id_name, 1, 0)
+        info_layout.addWidget(self.lbl_chip_id, 1, 1, Qt.AlignmentFlag.AlignRight)
+
+        lbl_bitrate_name = QLabel("Bootloader bitrate:")
+        lbl_bitrate_name.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        lbl_bitrate_name.setStyleSheet("color: #d9e2ec;")
+        lbl_bitrate_value = QLabel("125 kbit/s")
+        lbl_bitrate_value.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        lbl_bitrate_value.setStyleSheet("color: #f9b44a; font-weight: 700;")
+        info_layout.addWidget(lbl_bitrate_name, 2, 0)
+        info_layout.addWidget(lbl_bitrate_value, 2, 1, Qt.AlignmentFlag.AlignRight)
+
+        layout.addWidget(info_group)
+
+        # Firmware
+        fw_group = QGroupBox("▣ Firmware")
+        fw_layout = QGridLayout(fw_group)
+        fw_layout.setSpacing(11)
+
+        fw_layout.addWidget(QLabel("File:"), 0, 0)
+        self.txt_firmware = QLineEdit()
+        self.txt_firmware.setPlaceholderText("C:/EDrive-Jackson/Charles_NR/JBOX3_V54_Test.hex")
+        self.btn_browse = QPushButton("...")
+        self.btn_browse.clicked.connect(self.browse_firmware)
+        self.btn_browse.setMaximumWidth(50)
+        self.btn_browse.setObjectName("btnBrowse")
+        fw_layout.addWidget(self.txt_firmware, 0, 1)
+        fw_layout.addWidget(self.btn_browse, 0, 2)
+
+        self.lbl_file_info = QLabel("No file selected")
+        self.lbl_file_info.setStyleSheet("color: #9aa8b7; font-size: 12px;")
+        fw_layout.addWidget(self.lbl_file_info, 1, 1, 1, 2)
+
+        layout.addWidget(fw_group)
+
+        # Actions
+        action_group = QGroupBox("ϟ Actions")
+        action_layout = QGridLayout(action_group)
+        action_layout.setSpacing(16)
+
+        self.btn_read_info = QPushButton("📄 Read Device Info")
+        self.btn_read_info.setObjectName("btnRead")
+        self.btn_read_info.clicked.connect(self.read_device_info)
+        self.btn_read_info.setMinimumHeight(84)
+        self.btn_read_info.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        action_layout.addWidget(self.btn_read_info, 0, 0)
+
+        self.btn_full_flash = QPushButton("ϟ Flash Firmware")
+        self.btn_full_flash.setObjectName("btnFlash")
+        self.btn_full_flash.clicked.connect(self.flash_firmware)
+        self.btn_full_flash.setMinimumHeight(84)
+        self.btn_full_flash.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        action_layout.addWidget(self.btn_full_flash, 0, 1)
+
+        self.btn_test_app = QPushButton("〽 Test Application CAN")
+        self.btn_test_app.setObjectName("btnTest")
+        self.btn_test_app.clicked.connect(self.test_application_can)
+        self.btn_test_app.setMinimumHeight(84)
+        self.btn_test_app.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        action_layout.addWidget(self.btn_test_app, 0, 2)
+
+        layout.addWidget(action_group)
+
+        self.chk_skip_erase = QCheckBox("Skip erase (only if already blank)")
+        layout.addWidget(self.chk_skip_erase)
+
+        # Progress
+        prog_group = QGroupBox("◔ Progress")
+        prog_layout = QVBoxLayout(prog_group)
+        prog_layout.setSpacing(12)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setMinimumHeight(28)
+        self.progress_bar.setValue(0)
+        prog_layout.addWidget(self.progress_bar)
+
+        self.lbl_status = QLabel("Ready")
+        self.lbl_status.setStyleSheet("font-weight: bold; color: #56d84f; font-size: 16px;")
+        self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_status.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        prog_layout.addWidget(self.lbl_status)
+
+        layout.addWidget(prog_group)
+        layout.addStretch()
+
+        return layout
+
+    def create_right_column(self):
+        """Create the right column with console/log."""
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        log_group = QGroupBox("▹_ Log")
+        log_layout = QVBoxLayout(log_group)
+        log_layout.setContentsMargins(0, 0, 0, 0)
+        log_layout.setSpacing(0)
+
+        # Log header
+        log_header = QHBoxLayout()
+        log_header.setContentsMargins(18, 12, 22, 12)
+        log_header.setSpacing(22)
+
+        log_title = QLabel("▹_ Log")
+        log_title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+
+        auto_scroll_check = QLabel("✓ Auto scroll")
+        auto_scroll_check.setStyleSheet("color: #b8c3cf; font-size: 13px; font-weight: 600;")
+
+        log_header.addWidget(log_title)
+        log_header.addStretch()
+        log_header.addWidget(auto_scroll_check)
+        log_header.addWidget(QLabel("▽ Filter"))
+
+        log_layout.addLayout(log_header)
+
+        # Console
+        self.console = QTextEdit()
+        self.console.setReadOnly(True)
+        self.console.setFont(QFont("Consolas", 12))
+        self.console.setPlainText(
+            "STM32 CAN Bootloader Programmer v1.2\n"
+            "Integrated CANPROG Engine\n"
+            "System Ready. Click Connect to detect IXXAT interface."
+        )
+        log_layout.addWidget(self.console, 1)
+
+        # Log actions
+        log_actions = QHBoxLayout()
+        log_actions.setContentsMargins(22, 0, 22, 0)
+        log_actions.setSpacing(14)
+
+        self.btn_clear = QPushButton("🗑 Clear")
+        self.btn_clear.setObjectName("btnClear")
+        self.btn_clear.clicked.connect(self.console.clear)
+        self.btn_clear.setMinimumWidth(122)
+        self.btn_clear.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+
+        self.btn_save_log = QPushButton("💾 Save Log")
+        self.btn_save_log.setObjectName("btnSave")
+        self.btn_save_log.clicked.connect(self.save_log)
+        self.btn_save_log.setMinimumWidth(122)
+        self.btn_save_log.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+
+        log_actions.addWidget(self.btn_clear)
+        log_actions.addWidget(self.btn_save_log)
+        log_actions.addStretch()
+
+        log_layout.addLayout(log_actions)
+        layout.addWidget(log_group, 1)
+
+        return layout
+
     def get_selected_bitrate(self):
         text = self.cmb_bitrate.currentText()
 
@@ -781,12 +1087,11 @@ class STM32FactoryProgrammer(QWidget):
             return 250000
         else:
             return 125000
-        
+
     def connect_can(self):
         self.log("Detecting IXXAT interface...")
         try:
             import can
-            # Open/close at 125k only to confirm that the adapter exists.
             bus = can.Bus(interface='ixxat', channel=0, bitrate=125000)
             bus.shutdown()
             self.set_connected(True)
@@ -798,10 +1103,10 @@ class STM32FactoryProgrammer(QWidget):
     def set_connected(self, connected):
         if connected:
             self.lbl_online.setText("● ONLINE")
-            self.lbl_online.setStyleSheet("color: #3fb950; font-weight: bold; font-size: 12px;")
-            self.lbl_status.setText("Connected")
-            self.lbl_status.setStyleSheet("color: #3fb950; font-weight: bold;")
-            self.btn_connect.setText("Disconnect")
+            self.lbl_online.setStyleSheet("color: #56d84f; font-weight: 700; font-size: 14px;")
+            self.lbl_status.setText("✓ Connected")
+            self.lbl_status.setStyleSheet("color: #56d84f; font-weight: bold; font-size: 16px;")
+            self.btn_connect.setText("🔗 Disconnect")
             try:
                 self.btn_connect.clicked.disconnect()
             except Exception:
@@ -809,10 +1114,10 @@ class STM32FactoryProgrammer(QWidget):
             self.btn_connect.clicked.connect(self.disconnect_can)
         else:
             self.lbl_online.setText("● OFFLINE")
-            self.lbl_online.setStyleSheet("color: #ff4d4d; font-weight: bold; font-size: 12px;")
+            self.lbl_online.setStyleSheet("color: #ff5c57; font-weight: 700; font-size: 14px;")
             self.lbl_status.setText("Offline")
-            self.lbl_status.setStyleSheet("color: #888;")
-            self.btn_connect.setText("Connect")
+            self.lbl_status.setStyleSheet("color: #738294; font-size: 16px;")
+            self.btn_connect.setText("🔗 Connect")
             try:
                 self.btn_connect.clicked.disconnect()
             except Exception:
@@ -823,9 +1128,9 @@ class STM32FactoryProgrammer(QWidget):
     def disconnect_can(self):
         self.log("CAN interface disconnected")
         self.lbl_boot_ver.setText("Not Read")
-        self.lbl_boot_ver.setStyleSheet("color: #f2cc60; font-weight: bold;")
+        self.lbl_boot_ver.setStyleSheet("color: #f9b44a; font-weight: 900; font-size: 18px;")
         self.lbl_chip_id.setText("Unknown")
-        self.lbl_chip_id.setStyleSheet("color: #f2cc60; font-weight: bold;")
+        self.lbl_chip_id.setStyleSheet("color: #f9b44a; font-weight: 900; font-size: 18px;")
         self.progress_bar.setValue(0)
         self.set_connected(False)
 
@@ -875,7 +1180,7 @@ class STM32FactoryProgrammer(QWidget):
         if not file.lower().endswith(".hex") or not os.path.exists(file):
             QMessageBox.critical(self, "Invalid File", "Select a valid .hex file.")
             return
-        if self.get_selected_bitrate()!= 125000:
+        if self.get_selected_bitrate() != 125000:
             QMessageBox.warning(self, "Wrong Bitrate", "Flashing requires 125 kbit/s bootloader mode.")
             return
 
@@ -904,9 +1209,7 @@ class STM32FactoryProgrammer(QWidget):
         self.current_worker.start()
 
     def connect_worker(self, worker):
-
         self.update_ui_state(True)
-
         self.current_worker = worker
         self.workers.append(worker)
 
@@ -919,10 +1222,8 @@ class STM32FactoryProgrammer(QWidget):
         )
 
     def cleanup_worker(self, worker):
-
         if worker in self.workers:
             self.workers.remove(worker)
-
         worker.deleteLater()
 
     def clean_and_log(self, text):
@@ -932,7 +1233,6 @@ class STM32FactoryProgrammer(QWidget):
         self.log(cleaned)
 
     def clean_canprog_error(self, text):
-        
         if text.startswith("RAW ") or text.startswith("ERROR:"):
             return text
 
@@ -971,19 +1271,28 @@ class STM32FactoryProgrammer(QWidget):
         if code == 0:
             self.ok_count += 1
             self.progress_bar.setValue(100)
-            self.lbl_status.setText("Success")
-            self.lbl_status.setStyleSheet("color: #3fb950; font-weight: bold;")
+            self.lbl_status.setText("✓ Success")
+            self.lbl_status.setStyleSheet("color: #56d84f; font-weight: bold; font-size: 16px;")
             self.log(f"✓ Operation successful: {summary}")
         elif code == -2:
-            self.lbl_status.setText("Cancelled")
-            self.lbl_status.setStyleSheet("color: #f2cc60; font-weight: bold;")
+            self.lbl_status.setText("⊗ Cancelled")
+            self.lbl_status.setStyleSheet("color: #f9b44a; font-weight: bold; font-size: 16px;")
             self.log(f"Operation cancelled: {summary}")
         else:
             self.fail_count += 1
-            self.lbl_status.setText("Failed")
-            self.lbl_status.setStyleSheet("color: #f85149; font-weight: bold;")
+            self.lbl_status.setText("✗ Failed")
+            self.lbl_status.setStyleSheet("color: #ff5c57; font-weight: bold; font-size: 16px;")
             self.log(f"✗ Operation failed: {summary}")
         self.update_stats()
+
+    def update_ui_state(self, busy):
+        self.btn_connect.setEnabled(not busy)
+        self.btn_browse.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE")
+        self.btn_read_info.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE")
+        self.btn_test_app.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE")
+        self.btn_full_flash.setEnabled(not busy and self.lbl_online.text() != "● OFFLINE" and self.txt_firmware.text().lower().endswith(".hex"))
+        self.cmb_interface.setEnabled(not busy)
+        self.cmb_bitrate.setEnabled(not busy)
 
     def save_log(self):
         file, _ = QFileDialog.getSaveFileName(self, "Save Log", "", "Text Files (*.txt)")
